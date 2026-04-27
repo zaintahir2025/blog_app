@@ -384,4 +384,4 @@ Inkwell is a polished Flutter blogging application that demonstrates:
 - responsive cross-platform UI
 - optional social and sharing systems
 
-It is designed to show both engineering structure and product presentation quality in one repository.
+
