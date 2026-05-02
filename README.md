@@ -98,6 +98,11 @@ test/
 - `theme/` centralizes the design language for light and dark themes.
 - `main.dart` initializes Hive, Supabase, theming, and app routing.
 
+## Project docs
+
+- `docs/architecture.md` explains the app structure, state flow, persistence, routing, and optional backend features.
+- `docs/development_checklist.md` gives a practical setup, testing, and contribution checklist.
+
 ## Main feature areas
 
 ### Authentication
