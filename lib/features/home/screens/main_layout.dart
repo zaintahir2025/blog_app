@@ -149,12 +149,12 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
       body: Row(
         children: [
           Container(
-            width: extendedRail ? 248 : 96,
-            padding: const EdgeInsets.fromLTRB(12, 16, 12, 16),
+            width: extendedRail ? 260 : 88,
+            padding: const EdgeInsets.fromLTRB(16, 20, 12, 20),
             child: SafeArea(
               child: InkPanel(
-                padding: const EdgeInsets.fromLTRB(8, 14, 8, 12),
-                radius: 28,
+                padding: const EdgeInsets.fromLTRB(12, 16, 12, 16),
+                radius: 24,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -411,16 +411,17 @@ class _DesktopDestination extends StatelessWidget {
         borderRadius: BorderRadius.circular(22),
         onTap: onTap,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutCubic,
           padding: EdgeInsets.symmetric(
-            horizontal: extended ? 16 : 8,
-            vertical: extended ? 16 : 12,
+            horizontal: extended ? 16 : 0,
+            vertical: extended ? 12 : 12,
           ),
           decoration: BoxDecoration(
             color: selected
                 ? colorScheme.primary.withValues(alpha: 0.12)
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: selected
                   ? colorScheme.primary.withValues(alpha: 0.18)

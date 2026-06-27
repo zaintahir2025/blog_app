@@ -295,17 +295,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             children: [
               Expanded(
                 child: InkWell(
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(16),
                   onTap: () => context.push('/discover'),
                   child: Container(
                     padding: EdgeInsets.symmetric(
                       horizontal: narrow ? 14 : 16,
-                      vertical: narrow ? 12 : 14,
+                      vertical: narrow ? 10 : 12,
                     ),
                     decoration: BoxDecoration(
-                      color: colorScheme.surface.withValues(alpha: 0.92),
-                      borderRadius: BorderRadius.circular(18),
+                      color: colorScheme.surface.withValues(alpha: 0.96),
+                      borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: colorScheme.outlineVariant),
+                      boxShadow: [
+                        BoxShadow(
+                          color: colorScheme.shadow.withValues(alpha: 0.05),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: Row(
                       children: [
@@ -382,7 +389,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             'A calmer reading desk for your daily feed.',
             style: Theme.of(context).textTheme.displaySmall?.copyWith(
                   color: colorScheme.onSurface,
-                  fontSize: compact ? 24 : 28,
+                  fontSize: compact ? 22 : 26,
+                  height: 1.15,
                 ),
           ),
           const SizedBox(height: 8),
