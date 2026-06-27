@@ -221,6 +221,28 @@ class SettingsScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
+                SizedBox(height: AppLayout.panelGap(context)),
+                _SettingsSection(
+                  title: 'About Inkwell',
+                  subtitle: 'App information and resources.',
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Icon(Icons.info_outline_rounded),
+                        title: Text('Version'),
+                        subtitle: Text('1.0.0 (Build 1)'),
+                      ),
+                      const ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Icon(Icons.code_rounded),
+                        title: Text('Developer'),
+                        subtitle: Text('Zain Tahir'),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
