@@ -305,12 +305,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                 ),
                               ),
                               child: _isSending
-                                  ? const SizedBox(
+                                  ? SizedBox(
                                       width: 18,
                                       height: 18,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
-                                        color: Colors.white,
+                                        color: Theme.of(context).colorScheme.onPrimary,
                                       ),
                                     )
                                   : const Icon(Icons.send_rounded),

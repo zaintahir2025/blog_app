@@ -4,12 +4,20 @@ import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:blog_app/core/providers/app_preferences_provider.dart';
 import 'package:blog_app/features/blog/models/post_model.dart';
 
 class BlogFeedNotifier extends StateNotifier<AsyncValue<List<PostModel>>> {
-  BlogFeedNotifier() : super(const AsyncValue.loading()) {
+  BlogFeedNotifier(this.ref) : super(const AsyncValue.loading()) {
     fetchPosts();
   }
+
+  final Ref ref;
+
+  bool get _isAnonymous => ref.read(appPreferencesProvider).isAnonymousMode;
+  String get _currentUserId => _isAnonymous
+      ? 'guest_user_123'
+      : (Supabase.instance.client.auth.currentUser?.id ?? '');
 
   static Box<dynamic> get _postsBox => Hive.box<dynamic>('posts_box');
 
@@ -23,6 +31,10 @@ class BlogFeedNotifier extends StateNotifier<AsyncValue<List<PostModel>>> {
     Uint8List? webImageBytes,
     String prefix = 'story_assets',
   }) async {
+    if (_isAnonymous) {
+      return 'https://via.placeholder.com/800x400.png?text=Guest+Upload';
+    }
+
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) {
       throw 'Not logged in';
@@ -63,7 +75,7 @@ class BlogFeedNotifier extends StateNotifier<AsyncValue<List<PostModel>>> {
   Future<void> fetchPosts() async {
     try {
       final box = _postsBox;
-      final currentUserId = Supabase.instance.client.auth.currentUser?.id ?? '';
+      final currentUserId = _currentUserId;
 
       if (box.isNotEmpty) {
         final cachedPosts = sortPosts(
@@ -74,6 +86,13 @@ class BlogFeedNotifier extends StateNotifier<AsyncValue<List<PostModel>>> {
         if (cachedPosts.isNotEmpty) {
           state = AsyncValue.data(cachedPosts);
         }
+      }
+
+      if (_isAnonymous) {
+        if (box.isEmpty) {
+          state = const AsyncValue.data([]);
+        }
+        return;
       }
 
       final response = await Supabase.instance.client
@@ -96,7 +115,7 @@ class BlogFeedNotifier extends StateNotifier<AsyncValue<List<PostModel>>> {
 
   Future<PostModel?> fetchPostById(String postId) async {
     final localPosts = state.value ?? const [];
-    final currentUserId = Supabase.instance.client.auth.currentUser?.id ?? '';
+    final currentUserId = _currentUserId;
     final localMatch = localPosts.cast<PostModel?>().firstWhere(
           (post) => post?.id == postId,
           orElse: () => null,
@@ -104,6 +123,8 @@ class BlogFeedNotifier extends StateNotifier<AsyncValue<List<PostModel>>> {
     if (localMatch != null) {
       return canAccessPost(localMatch, currentUserId) ? localMatch : null;
     }
+
+    if (_isAnonymous) return null;
 
     final response = await Supabase.instance.client
         .from('posts')
@@ -130,8 +151,8 @@ class BlogFeedNotifier extends StateNotifier<AsyncValue<List<PostModel>>> {
   }
 
   Future<void> toggleLike(String postId) async {
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) return;
+    if (!_isAnonymous && Supabase.instance.client.auth.currentUser == null) return;
+    final userId = _currentUserId;
 
     final currentPosts = state.value ?? [];
     final postIndex = currentPosts.indexWhere((p) => p.id == postId);
@@ -148,16 +169,18 @@ class BlogFeedNotifier extends StateNotifier<AsyncValue<List<PostModel>>> {
     state = AsyncValue.data(updatedPosts);
 
     try {
-      if (wasLiked) {
-        await Supabase.instance.client
-            .from('likes')
-            .delete()
-            .eq('post_id', postId)
-            .eq('user_id', user.id);
-      } else {
-        await Supabase.instance.client
-            .from('likes')
-            .insert({'post_id': postId, 'user_id': user.id});
+      if (!_isAnonymous) {
+        if (wasLiked) {
+          await Supabase.instance.client
+              .from('likes')
+              .delete()
+              .eq('post_id', postId)
+              .eq('user_id', userId);
+        } else {
+          await Supabase.instance.client
+              .from('likes')
+              .insert({'post_id': postId, 'user_id': userId});
+        }
       }
 
       await _persistPosts(updatedPosts);
@@ -167,8 +190,8 @@ class BlogFeedNotifier extends StateNotifier<AsyncValue<List<PostModel>>> {
   }
 
   Future<void> toggleBookmark(String postId) async {
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) return;
+    if (!_isAnonymous && Supabase.instance.client.auth.currentUser == null) return;
+    final userId = _currentUserId;
 
     final currentPosts = state.value ?? [];
     final postIndex = currentPosts.indexWhere((p) => p.id == postId);
@@ -182,16 +205,18 @@ class BlogFeedNotifier extends StateNotifier<AsyncValue<List<PostModel>>> {
     state = AsyncValue.data(updatedPosts);
 
     try {
-      if (wasBookmarked) {
-        await Supabase.instance.client
-            .from('bookmarks')
-            .delete()
-            .eq('post_id', postId)
-            .eq('user_id', user.id);
-      } else {
-        await Supabase.instance.client
-            .from('bookmarks')
-            .insert({'post_id': postId, 'user_id': user.id});
+      if (!_isAnonymous) {
+        if (wasBookmarked) {
+          await Supabase.instance.client
+              .from('bookmarks')
+              .delete()
+              .eq('post_id', postId)
+              .eq('user_id', userId);
+        } else {
+          await Supabase.instance.client
+              .from('bookmarks')
+              .insert({'post_id': postId, 'user_id': userId});
+        }
       }
 
       await _persistPosts(updatedPosts);
@@ -207,8 +232,8 @@ class BlogFeedNotifier extends StateNotifier<AsyncValue<List<PostModel>>> {
       File? imageFile,
       Uint8List? webImageBytes}) async {
     try {
-      final user = Supabase.instance.client.auth.currentUser;
-      if (user == null) throw 'Not logged in';
+      if (!_isAnonymous && Supabase.instance.client.auth.currentUser == null) throw 'Not logged in';
+      final userId = _currentUserId;
 
       String? imageUrl;
       if (imageFile != null || webImageBytes != null) {
@@ -219,8 +244,28 @@ class BlogFeedNotifier extends StateNotifier<AsyncValue<List<PostModel>>> {
         );
       }
 
+      if (_isAnonymous) {
+        final newPost = PostModel(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          userId: userId,
+          title: title.trim(),
+          content: content.trim(),
+          coverImageUrl: imageUrl,
+          isPublished: isPublished,
+          createdAt: DateTime.now(),
+          authorName: 'Guest User',
+          likesCount: 0,
+          isLikedByMe: false,
+          isBookmarkedByMe: false,
+        );
+        final updatedPosts = [newPost, ...(state.value ?? [])];
+        state = AsyncValue.data(sortPosts(updatedPosts));
+        await _persistPosts(updatedPosts);
+        return;
+      }
+
       await Supabase.instance.client.from('posts').insert({
-        'user_id': user.id,
+        'user_id': userId,
         'title': title.trim(),
         'content': content.trim(),
         'cover_image_url': imageUrl,
@@ -252,6 +297,25 @@ class BlogFeedNotifier extends StateNotifier<AsyncValue<List<PostModel>>> {
         );
       }
 
+      if (_isAnonymous) {
+        final currentPosts = state.value ?? [];
+        final postIndex = currentPosts.indexWhere((p) => p.id == postId);
+        if (postIndex != -1) {
+          final post = currentPosts[postIndex];
+          final updatedPost = post.copyWith(
+            title: title.trim(),
+            content: content.trim(),
+            coverImageUrl: finalImageUrl,
+            isPublished: isPublished,
+          );
+          final updatedPosts = List<PostModel>.from(currentPosts);
+          updatedPosts[postIndex] = updatedPost;
+          state = AsyncValue.data(updatedPosts);
+          await _persistPosts(updatedPosts);
+        }
+        return;
+      }
+
       await Supabase.instance.client.from('posts').update({
         'title': title.trim(),
         'content': content.trim(),
@@ -267,6 +331,18 @@ class BlogFeedNotifier extends StateNotifier<AsyncValue<List<PostModel>>> {
 
   Future<void> togglePublish(String postId, bool currentStatus) async {
     try {
+      if (_isAnonymous) {
+        final currentPosts = state.value ?? [];
+        final postIndex = currentPosts.indexWhere((p) => p.id == postId);
+        if (postIndex != -1) {
+          final updatedPosts = List<PostModel>.from(currentPosts);
+          updatedPosts[postIndex] = updatedPosts[postIndex].copyWith(isPublished: !currentStatus);
+          state = AsyncValue.data(updatedPosts);
+          await _persistPosts(updatedPosts);
+        }
+        return;
+      }
+
       await Supabase.instance.client
           .from('posts')
           .update({'is_published': !currentStatus}).eq('id', postId);
@@ -278,6 +354,14 @@ class BlogFeedNotifier extends StateNotifier<AsyncValue<List<PostModel>>> {
 
   Future<void> deletePost(String postId) async {
     try {
+      if (_isAnonymous) {
+        final currentPosts = state.value ?? [];
+        final updatedPosts = currentPosts.where((p) => p.id != postId).toList();
+        state = AsyncValue.data(updatedPosts);
+        await _persistPosts(updatedPosts);
+        return;
+      }
+
       await Supabase.instance.client.from('posts').delete().eq('id', postId);
       await fetchPosts();
     } catch (e) {
@@ -288,7 +372,7 @@ class BlogFeedNotifier extends StateNotifier<AsyncValue<List<PostModel>>> {
 
 final blogFeedProvider =
     StateNotifierProvider<BlogFeedNotifier, AsyncValue<List<PostModel>>>((ref) {
-  return BlogFeedNotifier();
+  return BlogFeedNotifier(ref);
 });
 
 final postByIdProvider = FutureProvider.family<PostModel?, String>((
@@ -296,7 +380,8 @@ final postByIdProvider = FutureProvider.family<PostModel?, String>((
   postId,
 ) async {
   final feedState = ref.watch(blogFeedProvider);
-  final currentUserId = Supabase.instance.client.auth.currentUser?.id ?? '';
+  final isAnonymous = ref.watch(appPreferencesProvider).isAnonymousMode;
+  final currentUserId = isAnonymous ? 'guest_user_123' : (Supabase.instance.client.auth.currentUser?.id ?? '');
   final localPost = feedState.valueOrNull?.cast<PostModel?>().firstWhere(
         (post) => post?.id == postId,
         orElse: () => null,

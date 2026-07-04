@@ -8,6 +8,7 @@ class AppPreferences {
     required this.compactCards,
     required this.readerTextScale,
     required this.reducedMotion,
+    required this.isAnonymousMode,
   });
 
   factory AppPreferences.defaults() {
@@ -16,6 +17,7 @@ class AppPreferences {
       compactCards: false,
       readerTextScale: 1,
       reducedMotion: false,
+      isAnonymousMode: false,
     );
   }
 
@@ -23,18 +25,21 @@ class AppPreferences {
   final bool compactCards;
   final double readerTextScale;
   final bool reducedMotion;
+  final bool isAnonymousMode;
 
   AppPreferences copyWith({
     ThemeMode? themeMode,
     bool? compactCards,
     double? readerTextScale,
     bool? reducedMotion,
+    bool? isAnonymousMode,
   }) {
     return AppPreferences(
       themeMode: themeMode ?? this.themeMode,
       compactCards: compactCards ?? this.compactCards,
       readerTextScale: readerTextScale ?? this.readerTextScale,
       reducedMotion: reducedMotion ?? this.reducedMotion,
+      isAnonymousMode: isAnonymousMode ?? this.isAnonymousMode,
     );
   }
 }
@@ -52,6 +57,7 @@ class AppPreferencesNotifier extends StateNotifier<AppPreferences> {
     final storedReaderTextScale =
         (_box.get('reader_text_scale') as num?)?.toDouble();
     final storedReducedMotion = _box.get('reduced_motion') as bool?;
+    final storedIsAnonymousMode = _box.get('is_anonymous_mode') as bool?;
 
     return AppPreferences(
       themeMode: switch (storedTheme) {
@@ -62,6 +68,7 @@ class AppPreferencesNotifier extends StateNotifier<AppPreferences> {
       compactCards: storedCompactCards ?? false,
       readerTextScale: storedReaderTextScale?.clamp(0.9, 1.3) ?? 1,
       reducedMotion: storedReducedMotion ?? false,
+      isAnonymousMode: storedIsAnonymousMode ?? false,
     );
   }
 
@@ -92,6 +99,11 @@ class AppPreferencesNotifier extends StateNotifier<AppPreferences> {
     await _box.put('reduced_motion', value);
   }
 
+  Future<void> setAnonymousMode(bool value) async {
+    state = state.copyWith(isAnonymousMode: value);
+    await _box.put('is_anonymous_mode', value);
+  }
+
   Future<void> reset() async {
     state = AppPreferences.defaults();
     await _box.putAll({
@@ -99,6 +111,7 @@ class AppPreferencesNotifier extends StateNotifier<AppPreferences> {
       'compact_cards': false,
       'reader_text_scale': 1.0,
       'reduced_motion': false,
+      'is_anonymous_mode': false,
     });
   }
 }

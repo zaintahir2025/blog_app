@@ -6,6 +6,7 @@ import 'package:blog_app/features/blog/providers/blog_provider.dart';
 import 'package:blog_app/features/blog/utils/post_insights.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:blog_app/core/providers/app_preferences_provider.dart';
 
 class ReadingResumeItem {
   const ReadingResumeItem({
@@ -30,7 +31,7 @@ final publishedPostsProvider = Provider<List<PostModel>>((ref) {
 });
 
 final myPostsProvider = Provider<List<PostModel>>((ref) {
-  final userId = _safeCurrentUserId();
+  final userId = _safeCurrentUserId(ref);
   if (userId == null) {
     return const [];
   }
@@ -245,7 +246,8 @@ final recentReadingItemsProvider = Provider<List<ReadingResumeItem>>((ref) {
       .toList();
 });
 
-String? _safeCurrentUserId() {
+String? _safeCurrentUserId(Ref ref) {
+  if (ref.read(appPreferencesProvider).isAnonymousMode) return 'guest_user_123';
   try {
     return Supabase.instance.client.auth.currentUser?.id;
   } catch (_) {

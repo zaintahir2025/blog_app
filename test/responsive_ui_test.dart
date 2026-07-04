@@ -13,7 +13,7 @@ import 'package:blog_app/theme/app_theme.dart';
 import 'test_bootstrap.dart';
 
 class _StaticBlogFeedNotifier extends BlogFeedNotifier {
-  _StaticBlogFeedNotifier(this.posts) : super() {
+  _StaticBlogFeedNotifier(Ref ref, this.posts) : super(ref) {
     state = AsyncValue.data(posts);
   }
 
@@ -43,7 +43,7 @@ void main() {
       themeMode: ThemeMode.light,
       overrides: [
         blogFeedProvider.overrideWith(
-          (ref) => _StaticBlogFeedNotifier(_samplePosts),
+          (ref) => _StaticBlogFeedNotifier(ref, _samplePosts),
         ),
       ],
     );
@@ -66,7 +66,7 @@ void main() {
       themeMode: ThemeMode.dark,
       overrides: [
         blogFeedProvider.overrideWith(
-          (ref) => _StaticBlogFeedNotifier(_samplePosts),
+          (ref) => _StaticBlogFeedNotifier(ref, _samplePosts),
         ),
       ],
     );
@@ -92,7 +92,7 @@ void main() {
       themeMode: ThemeMode.light,
       overrides: [
         blogFeedProvider.overrideWith(
-          (ref) => _StaticBlogFeedNotifier(_samplePosts),
+          (ref) => _StaticBlogFeedNotifier(ref, _samplePosts),
         ),
       ],
     );

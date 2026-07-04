@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:blog_app/core/providers/app_preferences_provider.dart';
 import 'package:blog_app/core/widgets/ink_surfaces.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -37,6 +38,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
   void _routeUser() {
     if (!mounted) {
+      return;
+    }
+
+    final isAnonymous = ref.read(appPreferencesProvider).isAnonymousMode;
+    if (isAnonymous) {
+      context.go('/home');
       return;
     }
 

@@ -328,18 +328,18 @@ class _CommentsBottomSheetState extends ConsumerState<CommentsBottomSheet> {
                           backgroundColor: colorScheme.primary,
                           radius: 24,
                           child: _isPosting
-                              ? const SizedBox(
+                              ? SizedBox(
                                   width: 20,
                                   height: 20,
                                   child: CircularProgressIndicator(
-                                    color: Colors.white,
+                                    color: colorScheme.onPrimary,
                                     strokeWidth: 2,
                                   ),
                                 )
                               : IconButton(
-                                  icon: const Icon(
+                                  icon: Icon(
                                     Icons.send_rounded,
-                                    color: Colors.white,
+                                    color: colorScheme.onPrimary,
                                     size: 20,
                                   ),
                                   onPressed: _submitComment,

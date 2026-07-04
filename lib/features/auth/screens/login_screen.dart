@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:blog_app/core/utils/app_error_mapper.dart';
 import 'package:blog_app/core/utils/app_feedback.dart';
 import 'package:blog_app/core/utils/app_validators.dart';
+import 'package:blog_app/core/providers/app_preferences_provider.dart';
 import 'package:blog_app/features/auth/providers/auth_provider.dart';
 import 'package:blog_app/features/auth/widgets/auth_shell.dart';
 
@@ -147,11 +148,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ElevatedButton(
                 onPressed: _isLoading ? null : _login,
                 child: _isLoading
-                    ? const SizedBox(
+                    ? SizedBox(
                         height: 24,
                         width: 24,
                         child: CircularProgressIndicator(
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.onPrimary,
                           strokeWidth: 2,
                         ),
                       )
@@ -160,6 +161,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         style: TextStyle(fontWeight: FontWeight.w700),
                       ),
               ).animate().fade(delay: 380.ms).slideY(begin: 0.08),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: () async {
+                  await ref
+                      .read(appPreferencesProvider.notifier)
+                      .setAnonymousMode(true);
+                  if (mounted) {
+                    context.go('/home');
+                  }
+                },
+                icon: const Icon(Icons.public),
+                label: const Text('Continue as Guest'),
+              ).animate().fade(delay: 420.ms).slideY(begin: 0.08),
             ],
           ),
         ),

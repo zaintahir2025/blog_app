@@ -159,11 +159,11 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
               ElevatedButton(
                 onPressed: _isLoading ? null : _signUp,
                 child: _isLoading
-                    ? const SizedBox(
+                    ? SizedBox(
                         height: 24,
                         width: 24,
                         child: CircularProgressIndicator(
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.onPrimary,
                           strokeWidth: 2,
                         ),
                       )

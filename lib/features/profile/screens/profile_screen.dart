@@ -8,6 +8,7 @@ import 'package:blog_app/core/providers/reading_history_provider.dart';
 import 'package:blog_app/core/utils/archive_links.dart';
 import 'package:blog_app/core/utils/app_layout.dart';
 import 'package:blog_app/core/widgets/ink_surfaces.dart';
+import 'package:blog_app/core/providers/app_preferences_provider.dart';
 import 'package:blog_app/features/auth/providers/auth_provider.dart';
 import 'package:blog_app/features/blog/providers/blog_insights_provider.dart';
 import 'package:blog_app/features/blog/providers/blog_provider.dart';
@@ -41,9 +42,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Future<void> _loadProfile() async {
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) {
+      final isAnonymous = ref.read(appPreferencesProvider).isAnonymousMode;
       if (mounted) {
         setState(() {
-          _profileData = null;
+          _profileData = isAnonymous ? {
+            'id': 'guest_user_123',
+            'full_name': 'Guest User',
+            'username': 'guest',
+          } : null;
           _isLoading = false;
         });
       }
@@ -107,6 +113,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       return;
     }
 
+    await ref.read(appPreferencesProvider.notifier).setAnonymousMode(false);
     await ref.read(authRepositoryProvider).signOut();
     if (context.mounted) {
       context.go('/login');
@@ -395,7 +402,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                     padding: const EdgeInsets.all(24),
                                     child: Text(
                                       'Error: $e',
-                                      style: const TextStyle(color: Colors.red),
+                                      style: TextStyle(color: colorScheme.error),
                                     ),
                                   ),
                                 ),
