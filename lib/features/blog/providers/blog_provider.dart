@@ -258,7 +258,7 @@ class BlogFeedNotifier extends StateNotifier<AsyncValue<List<PostModel>>> {
           isLikedByMe: false,
           isBookmarkedByMe: false,
         );
-        final updatedPosts = [newPost, ...(state.value ?? [])];
+        final updatedPosts = <PostModel>[newPost, ...(state.value ?? [])];
         state = AsyncValue.data(sortPosts(updatedPosts));
         await _persistPosts(updatedPosts);
         return;
